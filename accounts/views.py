@@ -11,47 +11,59 @@ def get_index(request):
 def logout(request):
     auth.logout(request)
     messages.success(request, 'You have successfully logged out')
-    return redirect(get_index)
+    return render(request, 'index.html')
     
 def login(request):
-    if request.method =="POST":
-        form = UserLoginForm(request.POST)
-        
-        if form.is_valid():
-            user = auth.authenticate(username=form.cleaned_data['username_or_email'],
-                                    password=form.cleaned_data['password'])
-        if user is not None:
-            auth.login(request, user)
-            messages.success(request, "You have successfully logged in")
-            
-            if request.GET and request.GET['next'] !='':
-                next = request.GET['next']
-                return HttpResponseRedirect(next)
+    """A view that manages the login form"""
+    if request.method == 'POST':
+        user_form = UserLoginForm(request.POST)
+        if user_form.is_valid():
+            user = auth.authenticate(username=request.POST['username_or_email'],
+                                     password=request.POST['password'])
+
+            if user:
+                auth.login(request, user)
+                messages.error(request, "You have successfully logged in")
+
+                if request.GET and request.GET['next'] !='':
+                    next = request.GET['next']
+                    return HttpResponseRedirect(next)
+                else:
+                    return redirect(reverse('index'))
             else:
-                return redirect(profile)
-        else:
-             form.add_error(None, "Your username or password was not recognised!")
-             #messages.error(request, "Error")
-          
-        
+                user_form.add_error(None, "Your username or password are incorrect")
     else:
-        form = UserLoginForm() 
-    return render(request, "login.html", {'form': form})
+        user_form = UserLoginForm()
+
+    args = {'user_form': user_form, 'next': request.GET.get('next', '')}
+    return render(request, 'login.html', args)
     
 def register(request):
-    if request.method=="POST":
-        form = UserRegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            
-            user = auth.authenticate(username=form.cleaned_data['username'],
-                                    password=form.cleaned_data['password1'])
-            if user is not None:
+    """A view that manages the registration form"""
+    if request.method == 'POST':
+        user_form = UserRegistrationForm(request.POST)
+        if user_form.is_valid():
+            user_form.save()
+
+            user = auth.authenticate(username=request.POST.get('email'),
+                                     password=request.POST.get('password1'))
+
+            if user:
                 auth.login(request, user)
-                return redirect(get_index)
+                messages.success(request, "You have successfully registered")
+                
+                if request.GET and request.GET['next'] !='':
+                    next = request.GET['next']
+                    return HttpResponseRedirect(next)
+                else:
+                    return redirect(reverse('index'))
+            else:
+                messages.error(request, "unable to log you in at this time!")
     else:
-        form = UserRegistrationForm()
-    return render(request, "register.html", {'form': form})
+        user_form = UserRegistrationForm()
+
+    args = {'user_form': user_form}
+    return render(request, 'register.html', args)
     
 @login_required(login_url='/accounts/login')
 def profile(request):
