@@ -140,6 +140,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/' 
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+SYSTEM_EMAIL="sales@djangomango.com"
+
+EMAIL_USE_TLS = True       
+EMAIL_HOST = 'smtp.gmail.com'      
+EMAIL_PORT = 587     
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')     
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 STRIPE_PUBLISHABLE = os.getenv('STRIPE_PUBLISHABLE_KEY', 'pk_test_obT7kpSPIlYzkjIdbzxCbdj0')
 STRIPE_SECRET = os.getenv('STRIPE_SECRET_KEY', 'sk_test_ZRWtuQR1RlPMZLHh5MobGQTY')

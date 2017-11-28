@@ -6,6 +6,8 @@ from .models import OrderLineItem
 from django.conf import settings
 from products.models import Product
 from django.utils import timezone
+from django.core.mail import EmailMessage, send_mail
+from django.template.loader import get_template
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET
@@ -45,8 +47,24 @@ def checkout(request):
 
             if customer.paid:
                 messages.error(request, "You have successfully paid")
+                
+                
+                # Send Email
+                template=get_template('confirmation_email.html')
+                context = {
+                    'site_name': "Blah Blah dot com",
+                }
+                content = template.render(context)
+                
+                subject = 'Thanks for buying our sh1t!'
+                message = content
+                from_email = settings.SYSTEM_EMAIL
+                to_email = [request.user.email]
+    
+                send_mail(subject,message,from_email,to_email,fail_silently=True)
+
                 request.session['cart'] = {}
-                return redirect(reverse('products'))
+                return redirect(reverse('index'))
             else:
                 messages.error(request, "Unable to take payment")
         else:
